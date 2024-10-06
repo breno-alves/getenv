@@ -14,12 +14,11 @@ func NewDotEnvClient() *DotEnvClient {
 }
 
 func (c *DotEnvClient) Read(path, env string) (string, error) {
-	bytes, err := c.readFile(path)
+	envs, err := c.readFile(path)
 	if err != nil {
 		return "", err
 	}
-
-	value, err := c.findEnv(env, bytes)
+	value, err := c.findEnv(envs, env)
 	if err != nil {
 		return "", err
 	}
@@ -27,7 +26,11 @@ func (c *DotEnvClient) Read(path, env string) (string, error) {
 }
 
 func (c *DotEnvClient) ReadBulk(path string) (map[string]string, error) {
-	return nil, nil
+	envs, err := c.readFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return envs, nil
 }
 
 func (c *DotEnvClient) Write(path, value string) error {
@@ -38,6 +41,14 @@ func (c *DotEnvClient) WriteBulk(path string, data map[string]string) error {
 	return nil
 }
 
+func (c *DotEnvClient) findEnv(envs map[string]string, env string) (string, error) {
+	value, ok := envs[env]
+	if !ok {
+		return "", errors.New("env not found")
+	}
+	return value, nil
+}
+
 func (c *DotEnvClient) fileExists(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -46,7 +57,7 @@ func (c *DotEnvClient) fileExists(path string) bool {
 	return !info.IsDir()
 }
 
-func (c *DotEnvClient) readFile(path string) ([]byte, error) {
+func (c *DotEnvClient) readFile(path string) (map[string]string, error) {
 	fileExists := c.fileExists(path)
 	if !fileExists {
 		return nil, errors.New("file does not exist")
@@ -55,12 +66,8 @@ func (c *DotEnvClient) readFile(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return bytes, nil
-}
-
-func (c *DotEnvClient) findEnv(env string, data []byte) (string, error) {
 	envs := make(map[string]string)
-	for _, line := range strings.Split(string(data), "\n") {
+	for _, line := range strings.Split(string(bytes), "\n") {
 		if strings.HasPrefix(line, "#") {
 			continue
 		}
@@ -70,9 +77,5 @@ func (c *DotEnvClient) findEnv(env string, data []byte) (string, error) {
 		}
 		envs[parts[0]] = parts[1]
 	}
-	value, ok := envs[env]
-	if !ok {
-		return "", errors.New("env not found")
-	}
-	return value, nil
+	return envs, nil
 }

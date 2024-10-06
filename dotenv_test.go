@@ -7,7 +7,7 @@ import (
 
 func TestDotEnvClient_findEnv(t *testing.T) {
 	c := NewDotEnvClient()
-	value, err := c.findEnv("FOO", []byte("FOO=bar\n"))
+	value, err := c.findEnv(map[string]string{"FOO": "bar"}, "FOO")
 	if err != nil {
 		t.Error(err)
 	}
@@ -19,6 +19,6 @@ func TestDotEnvClient_findEnv(t *testing.T) {
 
 func TestDotEnvClient_findEnv_envNotFound(t *testing.T) {
 	c := NewDotEnvClient()
-	_, err := c.findEnv("FOO", []byte("SOMETHINGELSE=bar\n"))
+	_, err := c.findEnv(map[string]string{"SOMETHINGELSE": "bar"}, "FOO")
 	assert.EqualError(t, err, "env not found")
 }
