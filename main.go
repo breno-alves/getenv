@@ -47,7 +47,7 @@ func main() {
 							return nil
 						},
 						Action: func(c *cli.Context) error {
-							NewAWSClient().GetSecret("", c.String("path"))
+							//AWSSSMClient().GetSecret("", c.String("path"))
 							return nil
 						},
 					},
